@@ -1,1 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fifteen Puzzle</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --tile: rgba(34, 166, 179, 0.8);
+      --tile-hover: rgba(34, 166, 179, 1.0);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --shadow: 0 10px 25px rgba(0, 0, 0, .25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top, #1f2937 0%, #111827 45%, #0b1020 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(92vw, 520px);
+      background: rgba(31, 41, 55, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      text-align: center;
+    }
+
+    .sub {
+      margin: 0 0 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .98rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 14px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .card .label {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      margin-bottom: 4px;
+    }
+
+    .card .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .board-wrap {
+      display: grid;
+      place-items: center;
+      margin: 14px 0 18px;
+    }
+
+    .board {
+      width: min(88vw, 420px);
+      height: min(88vw, 420px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(255, 255, 255, .05);
+      border-radius: 18px;
+      padding: 8px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .tile,
+    .empty {
+      border: none;
+      border-radius: 14px;
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      font-weight: 700;
+      transition: transform .12s ease, background .15s ease, opacity .15s ease;
+    }
+
+    .tile {
+      background: linear-gradient(180deg, var(--tile), var(--tile-hover));
+      color: white;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 6px 14px rgba(0, 0, 0, .22);
+    }
+
+    .tile:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .tile:active {
+      transform: translateY(1px) scale(.99);
+    }
+
+    .tile.hint {
+      outline: 3px solid rgba(16, 185, 129, .8);
+      outline-offset: -3px;
+    }
+
+    .empty {
+      background: rgba(255, 255, 255, .03);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    button.ctrl {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: .98rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: #374151;
+      transition: transform .12s ease, filter .15s ease;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, .18);
+    }
+
+    button.ctrl:hover {
+      filter: brightness(1.08);
+    }
+
+    button.ctrl:active {
+      transform: scale(.98);
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+    .secondary {
+      background: linear-gradient(180deg, #6366f1, #4f46e5);
+    }
+
+    .ghost {
+      background: linear-gradient(180deg, #4b5563, #374151);
+    }
+
+    .message {
+      min-height: 1.5em;
+      text-align: center;
+      font-weight: 700;
+      margin-top: 6px;
+      color: var(--accent);
+    }
+
+    .help {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+      line-height: 1.45;
+      margin-top: 12px;
+    }
+
+    kbd {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: .84rem;
+      color: var(--text);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <h1>Fifteen Puzzle</h1>
+    <p class="sub">Slide the tiles into order from 1 to 15.</p>
+
+    <section class="stats" aria-label="Game statistics">
+      <div class="card">
+        <span class="label">Moves</span>
+        <span class="value" id="moves">0</span>
+      </div>
+      <div class="card">
+        <span class="label">Time</span>
+        <span class="value" id="time">00:00</span>
+      </div>
+      <div class="card">
+        <span class="label">Best</span>
+        <span class="value" id="best">—</span>
+      </div>
+    </section>
+
+    <div class="board-wrap">
+      <div class="board" id="board" aria-label="Fifteen puzzle board"></div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl primary" id="shuffleBtn">Shuffle</button>
+      <button class="ctrl secondary" id="hintBtn">Hint</button>
+      <button class="ctrl ghost" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="message" id="message" aria-live="polite"></div>
+
+    <p class="help">
+      Click a tile next to the empty space, or use
+      <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>.
+    </p>
+  </main>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const timeEl = document.getElementById('time');
+    const bestEl = document.getElementById('best');
+    const messageEl = document.getElementById('message');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const hintBtn = document.getElementById('hintBtn');
+
+    const SOLVED = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+
+    let state = [...SOLVED];
+    let moves = 0;
+    let seconds = 0;
+    let timer = null;
+    let started = false;
+    let showingHint = false;
+
+    function formatTime(total) {
+      const m = String(Math.floor(total / 60)).padStart(2, '0');
+      const s = String(total % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function loadBest() {
+      const best = localStorage.getItem('fifteenPuzzleBest');
+      bestEl.textContent = best ? best : '—';
+    }
+
+    function saveBest() {
+      const current = `${moves} / ${formatTime(seconds)}`;
+      const raw = localStorage.getItem('fifteenPuzzleBestRaw');
+      const currentRaw = { moves, seconds };
+
+      if (!raw) {
+        localStorage.setItem('fifteenPuzzleBestRaw', JSON.stringify(currentRaw));
+        localStorage.setItem('fifteenPuzzleBest', current);
+        loadBest();
+        return;
+      }
+
+      const parsed = JSON.parse(raw);
+      const isBetter =
+        currentRaw.moves < parsed.moves ||
+        (currentRaw.moves === parsed.moves && currentRaw.seconds < parsed.seconds);
+
+      if (isBetter) {
+        localStorage.setItem('fifteenPuzzleBestRaw', JSON.stringify(currentRaw));
+        localStorage.setItem('fifteenPuzzleBest', current);
+        loadBest();
+      }
+    }
+
+    function startTimer() {
+      if (timer) return;
+      timer = setInterval(() => {
+        seconds++;
+        timeEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function resetStats() {
+      moves = 0;
+      seconds = 0;
+      started = false;
+      stopTimer();
+      movesEl.textContent = '0';
+      timeEl.textContent = '00:00';
+      messageEl.textContent = '';
+    }
+
+    function indexToRowCol(index) {
+      return { row: Math.floor(index / 4), col: index % 4 };
+    }
+
+    function areAdjacent(i, j) {
+      const a = indexToRowCol(i);
+      const b = indexToRowCol(j);
+      return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) === 1;
+    }
+
+    function render(activeHintIndex = hintIndex) {
+      boardEl.innerHTML = '';
+      state.forEach((value, index) => {
+        const cell = document.createElement('button');
+        if (value === 0) {
+          cell.className = 'empty';
+          cell.setAttribute('aria-label', 'Empty space');
+          cell.disabled = true;
+        } else {
+          cell.className = 'tile';
+          if (activeHintIndex === index) cell.classList.add('hint');
+          cell.textContent = value;
+          cell.setAttribute('aria-label', `Tile ${value}`);
+          cell.addEventListener('click', () => tryMove(index));
+        }
+        boardEl.appendChild(cell);
+      });
+
+      movesEl.textContent = String(moves);
+    }
+    function isSolved(arr = state) {
+      return arr.every((v, i) => v === SOLVED[i]);
+    }
+
+    function inversionCount(arr) {
+      const nums = arr.filter(n => n !== 0);
+      let inv = 0;
+      for (let i = 0; i < nums.length; i++) {
+        for (let j = i + 1; j < nums.length; j++) {
+          if (nums[i] > nums[j]) inv++;
+        }
+      }
+      return inv;
+    }
+
+    function isSolvable(arr) {
+      const inv = inversionCount(arr);
+      const blankRowFromBottom = 4 - Math.floor(arr.indexOf(0) / 4);
+      return (blankRowFromBottom % 2 === 0) ? (inv % 2 === 1) : (inv % 2 === 0);
+    }
+
+    function shuffledSolvableBoard() {
+      let arr;
+      do {
+        arr = [...SOLVED];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+      } while (!isSolvable(arr) || isSolved(arr));
+      return arr;
+    }
+
+    function tryMove(tileIndex) {
+      const emptyIndex = state.indexOf(0);
+      if (!areAdjacent(tileIndex, emptyIndex)) return;
+
+      [state[tileIndex], state[emptyIndex]] = [state[emptyIndex], state[tileIndex]];
+
+      if (!started) {
+        started = true;
+        startTimer();
+      }
+
+      moves++;
+      hintIndex = null;
+      messageEl.textContent = '';
+      render();
+
+      if (isSolved()) {
+        stopTimer();
+        messageEl.textContent = `Solved in ${moves} moves and ${formatTime(seconds)}!`;
+        saveBest();
+      }
+    }
+    function shuffleBoard() {
+      state = shuffledSolvableBoard();
+      resetStats();
+      render();
+    }
+
+    function resetBoard() {
+      state = [...SOLVED];
+      resetStats();
+      render();
+    }
+
+    function getMovableTileIndices(arr = state) {
+      const emptyIndex = arr.indexOf(0);
+      return arr
+        .map((_, i) => i)
+        .filter(i => i !== emptyIndex && areAdjacent(i, emptyIndex));
+    }
+
+    let hintIndex = null;
+
+    function manhattanDistance(arr) {
+      let total = 0;
+
+      for (let i = 0; i < arr.length; i++) {
+        const value = arr[i];
+        if (value === 0) continue;
+
+        const currentRow = Math.floor(i / 4);
+        const currentCol = i % 4;
+
+        const targetIndex = value - 1;
+        const targetRow = Math.floor(targetIndex / 4);
+        const targetCol = targetIndex % 4;
+
+        total += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
+      }
+
+      return total;
+    }
+
+    function hint() {
+      const candidates = getMovableTileIndices();
+      if (!candidates.length) return;
+
+      let bestIndex = candidates[0];
+      let bestScore = Infinity;
+
+      for (const idx of candidates) {
+        const test = [...state];
+        const empty = test.indexOf(0);
+        [test[idx], test[empty]] = [test[empty], test[idx]];
+
+        const score = manhattanDistance(test);
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestIndex = idx;
+        }
+      }
+
+      hintIndex = bestIndex;
+      messageEl.textContent = `Try moving tile ${state[bestIndex]}`;
+      render(hintIndex);
+    }
+    document.addEventListener('keydown', (e) => {
+      const emptyIndex = state.indexOf(0);
+      const { row, col } = indexToRowCol(emptyIndex);
+
+      let tileIndex = null;
+
+      if (e.key === 'ArrowUp' && row < 3) tileIndex = emptyIndex + 4;
+      if (e.key === 'ArrowDown' && row > 0) tileIndex = emptyIndex - 4;
+      if (e.key === 'ArrowLeft' && col < 3) tileIndex = emptyIndex + 1;
+      if (e.key === 'ArrowRight' && col > 0) tileIndex = emptyIndex - 1;
+
+      if (tileIndex !== null) {
+        e.preventDefault();
+        tryMove(tileIndex);
+      }
+    });
+
+    shuffleBtn.addEventListener('click', shuffleBoard);
+    resetBtn.addEventListener('click', resetBoard);
+    hintBtn.addEventListener('click', hint);
+
+    loadBest();
+    render();
+  </script>
+</body>
+
+</html>
