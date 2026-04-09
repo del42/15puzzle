@@ -31,7 +31,6 @@
         radial-gradient(circle at top, #1f2937 0%, #111827 45%, #0b1020 100%);
       color: var(--text);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      padding: 24px;
     }
 
     .app {
@@ -90,20 +89,20 @@
       margin: 14px 0 18px;
     }
 
-    .board {
-      width: min(88vw, 420px);
-      height: min(88vw, 420px);
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(4, 1fr);
-      gap: 8px;
-      background: rgba(255, 255, 255, .05);
-      border-radius: 18px;
-      padding: 8px;
-      user-select: none;
-      touch-action: manipulation;
-    }
+.board {
+  width: min(calc(92vw - 44px), 420px);
+  height: min(calc(92vw - 44px), 420px);
 
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, .05);
+  border-radius: 18px;
+  padding: 8px;
+  user-select: none;
+  touch-action: manipulation;
+}
     .tile,
     .empty {
       border: none;
@@ -241,8 +240,8 @@
     <div class="message" id="message" aria-live="polite"></div>
 
     <p class="help">
-      Click a tile next to the empty space, or use
-      <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>.
+      Click a tile next to the empty space, </br>or
+      <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>
     </p>
     <div style ="text-align: center; color: var(--muted); font-size: 0.9rem; margin-top: 16px;">
       Happy coding with <a style="color: var(--muted);" href="https://github.com/del42/15puzzle" target="_blank" class="credit">me</a>
